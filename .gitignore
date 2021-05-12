@@ -1,0 +1,8 @@
+# Ignore all
+*
+
+# Unignore
+!*.asm
+!*.uvproj
+!.gitignore
+!*.md
