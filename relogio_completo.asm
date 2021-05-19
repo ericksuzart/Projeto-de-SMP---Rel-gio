@@ -198,6 +198,7 @@ L1:
 ; ======================================
 ;		  Mostrar data no display
 ; ======================================
+
 MostrarData:
 		mov		a, ANOS
 		mov		b, #10
@@ -233,9 +234,9 @@ MostrarData:
 ; ======================================
 ;		  Mostrar dia da semana no display
 ; ======================================
-		jnb	BOTAO_DIA, MostrarDiaDaSemana
+		; jnb	BOTAO_DIA, MostrarDiaDaSemana
 
-MostrarDiaDaSemana:
+; MostrarDiaDaSemana:
 
 
 ; ======================================
@@ -255,18 +256,79 @@ LoopDoContador:
 		cjne	a, #high(480), GoToDisplayScan
 		jmp		ZerarContador	; Passou 1 segundo
 
-; Usando LoopDoRelogio como intermediário por causa do comando "jc"
+; Usando IncrementarSegundo como intermediário por causa do comando "jc"
 GoToDisplayScan:
-		jc		LoopDoRelogio 
+		jc		IncrementarSegundo 
+
 ZerarContador:
 		mov		r3, #0
 		mov		r4, #0
 
 ; ======================================
+;		  Ajustes
+; ======================================
+
+		jnb	AJUSTE_SEG, AjustarSegundo
+		jmp IfAjusteMinutos
+
+AjustarSegundo:
+		mov 	SEGUNDOS, #0
+
+IfAjusteMinutos:
+		jnb	AJUSTE_MIN, AjustarMinutos
+		jmp IfAjusteHora
+
+AjustarMinutos:
+		inc 	MINUTOS
+		mov 	a, MINUTOS
+		cjne	a, #60, IncrementarMinuto
+		jmp 	ZerarMinuto
+
+IfAjusteHora:
+		jnb 	AJUSTE_HORA, AjustarHoras
+		jmp 	IfAjusteDia
+
+AjustarHoras:
+		inc 	HORAS
+		mov 	a, HORAS
+		cjne	a, #24, IncrementarHora		; Hora diferente de 24
+		jmp 	ZerarHora					; Hora igual a 24
+
+IfAjusteDia:
+		jnb 	AJUSTE_DIA, AjustarDia
+		jmp 	IfAjusteMes
+
+AjustarDia:
+		inc 	DIAS
+		jmp 	IfJaneiro
+
+IfAjusteMes:
+		jnb 	AJUSTE_MES, AjustarMes
+		jmp 	IfAjusteAno
+
+AjustarMes:
+		inc 	MESES
+		mov 	a, MESES
+		cjne	a, #13, IfAjusteAno		; Mes diferente de 13
+		mov MESES, #0					; Mes igual a 13
+
+IfAjusteAno:
+		jnb 	AJUSTE_ANO, AjustarAno
+		jmp 	ContagemDoRelogio
+
+AjustarAno:
+		inc 	ANOS
+		mov 	a, ANOS
+		cjne	a, #100, ContagemDoRelogio		; Ano diferente de 99
+		mov 	ANOS, #0					; Ano igual a 100
+
+; ======================================
 ;		  Incrementa relógio
 ; ======================================
+
+ContagemDoRelogio:
 		inc 	SEGUNDOS
-		MOV 	a, SEGUNDOS
+		mov 	a, SEGUNDOS
 		cjne	a, #60, IncrementarSegundo	; Segundo diferente de 60
 		jmp 	ZerarSegundo 				; Segundo igual a 60
 
@@ -276,7 +338,7 @@ IncrementarSegundo:
 ZerarSegundo:
 		mov 	SEGUNDOS, #0
 		inc 	MINUTOS
-		MOV 	a, MINUTOS
+		mov 	a, MINUTOS
 		cjne	a, #60, IncrementarMinuto	; Minuto diferente de 60
 		jmp 	ZerarMinuto 					; Minuto igual a 60
 
@@ -286,7 +348,7 @@ IncrementarMinuto:
 ZerarMinuto:
 		mov 	MINUTOS, #0
 		inc 	HORAS
-		MOV 	a, HORAS
+		mov 	a, HORAS
 		cjne	a, #24, IncrementarHora		; Hora diferente de 24
 		jmp 	ZerarHora					; Hora igual a 24
 
@@ -296,9 +358,7 @@ IncrementarHora:
 ZerarHora:
 		mov 	HORAS, #0
 		inc 	DIAS
-		mov 	a, MESES
-		cjne	a, #1, IfFevereiro		; Mes diferente de 1 (Fev)
-		jmp 	Mes31
+		jmp 	IfJaneiro
 
 LoopDoRelogio:
 		jmp	DisplayScan
@@ -307,36 +367,51 @@ LoopDoRelogio:
 ; ======================================
 ;		  Incrementar mês e ano
 ; ======================================
+IfJaneiro:
+		mov 	a, MESES
+		cjne	a, #1, IfFevereiro		; Mes diferente de 1 (Fev)
+		jmp 	Mes31
+
 IfFevereiro:
 		cjne	a,#2,IfMarco
 		jmp	Fevereiro
+
 IfMarco:
 		cjne	a,#3,IfAbril
 		jmp	Mes31
+
 IfAbril:
 		cjne	a,#4,IfMaio
 		jmp	Mes30
+
 IfMaio:
 		cjne	a,#5,IfJunho
 		jmp	Mes31
+
 IfJunho:
 		cjne	a,#6,IfJulho
 		jmp	Mes30
+
 IfJulho:
 		cjne	a,#7,IfAgosto
 		jmp	Mes31
+
 IfAgosto:
 		cjne	a,#8,IfSetembro
 		jmp	Mes31
+
 IfSetembro:
 		cjne	a,#9,IfOutubro
 		jmp	Mes30
+
 IfOutubro:
 		cjne	a,#10,IfNovembro
 		jmp	Mes31
+
 IfNovembro:
 		cjne	a,#11,IfDezembro
 		jmp	Mes30
+
 IfDezembro:
 		cjne	a,#12,AtualizarDisplay
 		mov	a,DIAS
@@ -349,21 +424,24 @@ IncrementarAno:
 		mov	MESES,#1
 		inc	ANOS
 		mov	a,ANOS
-		cjne	a,#99,ResetaAno
+		cjne	a,#100,ResetaAno
 		jmp	AtualizarDisplay
+
 ResetaAno:
-		jc	AtualizarDisplay
-		mov	ANOS,#0
-		jmp	AtualizarDisplay
+		jc  	AtualizarDisplay
+		mov 	ANOS,#0
+		jmp 	AtualizarDisplay
 
 Mes30:
 		mov	a,DIAS
 		cjne	a,#30,IncrementaMes
 		jmp	AtualizarDisplay
+
 Mes31:
 		mov	a,DIAS
 		cjne	a,#31,IncrementaMes
 		jmp	AtualizarDisplay
+
 Fevereiro:
 		mov	a,ANOS
 		mov	b,#4
@@ -373,6 +451,7 @@ Fevereiro:
 		mov	a,DIAS
 		cjne	a,#28,IncrementaMes
 		jmp	AtualizarDisplay
+
 AnoBissexto:
 		mov	a,DIAS
 		cjne	a,#29,IncrementaMes
