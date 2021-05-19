@@ -179,23 +179,23 @@ IfBotaoDia:
 ; Cálculo do dia da semana normal
 
 MostrarDiaDaSemana:
-		mov		a, MESES 			; A = MESES
-		mov		dptr, #Offsets
+		mov 		a, MESES 			; A = MESES
+		mov 		dptr, #Offsets
 		movc	a, @a+dptr			; A = OffsetDoMes
-		mov		b, DIAS
-		add		a, b						; A = OffsetDoMes + DIA
-		mov		b, #6
-		add		a, b						; A = OffsetDoMes + DIA + 6
-		mov		b, ANOS
-		add		a, b						; A = OffsetDoMes + DIA + 6 + ANOS
-		mov		r1, a						; R1 = A (guardo esse valor)
-		mov		a, ANOS
-		mov		b, #4
-		div		ab						; ANOS // 4 = a, ANOS % 4 = b
-		add		a, r1						; A = OffsetDoMes + DIA + 6 + ANOS + ANOS//4
-		mov		b, #7
-		div		ab						; A // 7 = a, A % 7 = b
-		mov		DIA_SEMANA, b	; R1 = b ( Dia da Semana: 0 - 6)
+		mov 		b, DIAS
+		add 		a, b						; A = OffsetDoMes + DIA
+		mov 		b, #6
+		add 		a, b						; A = OffsetDoMes + DIA + 6
+		mov 		b, ANOS
+		add 		a, b						; A = OffsetDoMes + DIA + 6 + ANOS
+		mov 		r1, a						; R1 = A (guardo esse valor)
+		mov 		a, ANOS
+		mov 		b, #4
+		div 		ab						; ANOS // 4 = a, ANOS % 4 = b
+		add 		a, r1						; A = OffsetDoMes + DIA + 6 + ANOS + ANOS//4
+		mov 		b, #7
+		div 		ab						; A // 7 = a, A % 7 = b
+		mov 		DIA_SEMANA, b	; R1 = b ( Dia da Semana: 0 - 6)
 
 ; Verificar se o ano é bissexto
 		mov		a,ANOS
@@ -348,12 +348,12 @@ MostrarData:
 		mov		COD1, a				; Dezena de dia
 		mov		a, b
 		movc	a, @a + dptr		; Pega o código em 7 segmentos
-		mov		COD0, a 			; Unidade de dia
-		mov		COD2, #0bFh 	; - 
-		mov		a, MESES
-		mov		b, #10
-		div		ab					; Quociente: dezena (a),  Resto: unidade (b)
-		mov		dptr, #tabela
+		mov 		COD0, a 			; Unidade de dia
+		mov 		COD2, #0bFh 	; - 
+		mov 		a, MESES
+		mov 		b, #10
+		div 		ab					; Quociente: dezena (a),  Resto: unidade (b)
+		mov 		dptr, #tabela
 		movc	a, @a + dptr		; Pega o código em 7 segmentos
 		mov		COD4, a 		 	; Dezena de mẽs
 		mov		a, b
@@ -377,10 +377,10 @@ MostrarData:
 
 IncrementarContador:
 ;   R4 HIGH = 1 R3 LOW = E0h
-		inc		r3
-		mov		a, r3
-		jnz		LoopDoContador
-		inc		r4
+		inc 		r3
+		mov 		a, r3
+		jnz 		LoopDoContador
+		inc 		r4
 
 LoopDoContador:
 		mov 		a, r3
@@ -405,11 +405,11 @@ ZerarContador:
 		jmp 		IfAjusteMinutos
 
 AjustarSegundo:
-		mov		SEGUNDOS, #0
+		mov 		SEGUNDOS, #0
 
 IfAjusteMinutos:
-		jnb		AJUSTE_MIN, AjustarMinutos
-		jmp		IfAjusteHora
+		jnb 		AJUSTE_MIN, AjustarMinutos
+		jmp 		IfAjusteHora
 
 AjustarMinutos:
 		inc 		MINUTOS
@@ -597,7 +597,7 @@ IncrementaMes:
 		jmp 		AtualizarDisplay
 
 AtualizarDisplay:
-		jmp		DisplayScan
+		jmp 		DisplayScan
 ;=====================================================		   
 
 
