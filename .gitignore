@@ -3,6 +3,6 @@
 
 # Unignore
 !*.asm
-!*.uvproj
+!*.uvproj  
 !.gitignore
 !*.md

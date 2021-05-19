@@ -13,7 +13,7 @@ DISPLAY_5		equ		P2.5
 DISPLAY_6		equ		P2.6
 DISPLAY_7		equ		P2.7
 BOTAO_DATA  	equ		P3.0	; Mostra data nos displays
-DIAS_SEMANA 	equ		P3.1	; Mostra da semana: DOM, SEG, TER, QUA, QUI, SEX, SAB.
+BOTAO_DIA 	equ		P3.1	; Mostra dia da semana: DOM, SEG, TER, QUA, QUI, SEX, SAB.
 AJUSTE_SEG  	equ		P3.2	; Zera SegundOo
 AJUSTE_MIN		equ		P3.3	; Ajuste Minuto
 AJUSTE_HORA 	equ		P3.4	; Ajuste Hora
@@ -153,7 +153,7 @@ L1:
 
 
 ; Caso o botão esteja pressionado, mostrar data
-		jnb	BOTAO_DATA, MostraData
+		jnb	BOTAO_DATA, MostrarData
 ; Caso o botão não seja pressionado, mostrar horas
 
 ; ======================================
@@ -193,12 +193,12 @@ L1:
 		movc	a,@a+dptr		; Pega o código em 7 segmentos
 		mov		COD6, a		  ; Unidade de horas
 
-		jmp		IncrementaContador
+		jmp		IncrementarContador
 
 ; ======================================
 ;		  Mostrar data no display
 ; ======================================
-MostraData:
+MostrarData:
 		mov		a, ANOS
 		mov		b, #10
 		div		ab				; Quociente: dezena (a), Resto: unidade (b)
@@ -228,12 +228,20 @@ MostraData:
 		mov		a, b
 		movc	a, @a+dptr		; Pega o código em 7 segmentos
 		mov		COD6,  a		 ; Unidade de ano
-		jmp		IncrementaContador
+		jmp		IncrementarContador
 
 ; ======================================
-;		  Incrementa contador
+;		  Mostrar dia da semana no display
 ; ======================================
-IncrementaContador:
+		jnb	BOTAO_DIA, MostrarDiaDaSemana
+
+MostrarDiaDaSemana:
+
+
+; ======================================
+;		  Incrementar e zerar contador 
+; ======================================
+IncrementarContador:
 ;   R4 HIGH = 1 R3 LOW = E0h
 		inc		r3
 		mov		a, r3
@@ -245,12 +253,12 @@ LoopDoContador:
 		cjne	a, #low(480), GoToDisplayScan
 		mov		a, r4
 		cjne	a, #high(480), GoToDisplayScan
-		jmp		ZeraContador	; Passou 1 segundo
+		jmp		ZerarContador	; Passou 1 segundo
 
+; Usando LoopDoRelogio como intermediário por causa do comando "jc"
 GoToDisplayScan:
-		jc		LoopDoRelogio
-;=====================================================		   
-ZeraContador:
+		jc		LoopDoRelogio 
+ZerarContador:
 		mov		r3, #0
 		mov		r4, #0
 
@@ -259,120 +267,130 @@ ZeraContador:
 ; ======================================
 		inc 	SEGUNDOS
 		MOV 	a, SEGUNDOS
-		cjne	a, #60, IncrementaSegundo	; Segundo diferente de 60
-		jmp 	ZeraSegundo 				; Segundo igual a 60
+		cjne	a, #60, IncrementarSegundo	; Segundo diferente de 60
+		jmp 	ZerarSegundo 				; Segundo igual a 60
 
-IncrementaSegundo:
+IncrementarSegundo:
 		jc  	LoopDoRelogio
 
-ZeraSegundo:
+ZerarSegundo:
 		mov 	SEGUNDOS, #0
 		inc 	MINUTOS
 		MOV 	a, MINUTOS
-		cjne	a, #60, IncrementaMinuto	; Minuto diferente de 60
-		jmp 	ZeraMIN 					; Minuto Igual a 60
+		cjne	a, #60, IncrementarMinuto	; Minuto diferente de 60
+		jmp 	ZerarMinuto 					; Minuto igual a 60
 
-IncrementaMinuto:
+IncrementarMinuto:
 		jc	LoopDoRelogio
 
-ZeraMIN:
+ZerarMinuto:
 		mov 	MINUTOS, #0
 		inc 	HORAS
 		MOV 	a, HORAS
-		cjne	a, #24, dif24
-		jmp 	zerahora	; É Igual
+		cjne	a, #24, IncrementarHora		; Hora diferente de 24
+		jmp 	ZerarHora					; Hora igual a 24
+
+IncrementarHora:
+		jc	LoopDoRelogio  ; É menor
+
+ZerarHora:
+		mov 	HORAS, #0
+		inc 	DIAS
+		mov 	a, MESES
+		cjne	a, #1, IfFevereiro		; Mes diferente de 1 (Fev)
+		jmp 	Mes31
 
 LoopDoRelogio:
-		jmp	encontro1
+		jmp	DisplayScan
 
-dif24:	jc	LoopDoRelogio  ; É menor
-		 
-zerahora:	mov	HORAS,#0
-		inc	DIAS
-		mov	a,MESES
-		cjne	a,#1,testefev
-		jmp	mes31
-testefev:	cjne	a,#2,testemar
-		jmp	mesfev
-testemar:	cjne	a,#3,testeabr
-		jmp	mes31
-testeabr:	cjne	a,#4,testemai
-		jmp	mes30
-testemai:	cjne	a,#5,testejun
-		jmp	mes31
-testejun:	cjne	a,#6,testejul
-		jmp	mes30
-testejul:	cjne	a,#7,testeago
-		jmp	mes31
-testeago:	cjne	a,#8,testeset
-		jmp	mes31
-testeset:	cjne	a,#9,testeout
-		jmp	mes30
-testeout:	cjne	a,#10,testenov
-		jmp	mes31
-testenov:	cjne	a,#11,testedez
-		jmp	mes30
-testedez:	cjne	a,#12,encontro1
 
-		mov	a,diaS
-		cjne	a,#31,dif31
-		jmp	encontro1
-dif31:	jc	encontro1
+; ======================================
+;		  Incrementar mês e ano
+; ======================================
+IfFevereiro:
+		cjne	a,#2,IfMarco
+		jmp	Fevereiro
+IfMarco:
+		cjne	a,#3,IfAbril
+		jmp	Mes31
+IfAbril:
+		cjne	a,#4,IfMaio
+		jmp	Mes30
+IfMaio:
+		cjne	a,#5,IfJunho
+		jmp	Mes31
+IfJunho:
+		cjne	a,#6,IfJulho
+		jmp	Mes30
+IfJulho:
+		cjne	a,#7,IfAgosto
+		jmp	Mes31
+IfAgosto:
+		cjne	a,#8,IfSetembro
+		jmp	Mes31
+IfSetembro:
+		cjne	a,#9,IfOutubro
+		jmp	Mes30
+IfOutubro:
+		cjne	a,#10,IfNovembro
+		jmp	Mes31
+IfNovembro:
+		cjne	a,#11,IfDezembro
+		jmp	Mes30
+IfDezembro:
+		cjne	a,#12,AtualizarDisplay
+		mov	a,DIAS
+		cjne	a,#31,IncrementarAno
+		jmp	AtualizarDisplay
+
+IncrementarAno:
+		jc	AtualizarDisplay
 		mov	DIAS,#1
 		mov	MESES,#1
-		
 		inc	ANOS
 		mov	a,ANOS
-		cjne	a,#99,dif99
-		jmp	encontro1
-dif99:	jc	encontro1
+		cjne	a,#99,ResetaAno
+		jmp	AtualizarDisplay
+ResetaAno:
+		jc	AtualizarDisplay
 		mov	ANOS,#0
-		jmp	encontro1
+		jmp	AtualizarDisplay
 
-mes30:	mov	a,DIAS
-		cjne	a,#30,dif30
-		jmp	encontro1
-dif30:	jc	encontro1
-		mov	DIAS,#1
-		inc	MESES
-		jmp	encontro1
-		
-mes31:	mov	a,DIAS
-		cjne	a,#31,dif31x
-		jmp	encontro1
-dif31x:	jc	encontro1
-		mov	DIAS,#1
-		inc	MESES
-		jmp	encontro1
-		
-mesfev:	mov	a,ANOS
+Mes30:
+		mov	a,DIAS
+		cjne	a,#30,IncrementaMes
+		jmp	AtualizarDisplay
+Mes31:
+		mov	a,DIAS
+		cjne	a,#31,IncrementaMes
+		jmp	AtualizarDisplay
+Fevereiro:
+		mov	a,ANOS
 		mov	b,#4
 		div	ab
 		mov	a,b
-		jz	anobissexto
+		jz	AnoBissexto
 		mov	a,DIAS
-		cjne	a,#28,dif28
-		jmp	encontro1
-dif28:	jc	encontro1
-		mov	DIAS,#1
-		inc	MESES
-		jmp	encontro1
-		
-anobissexto:
+		cjne	a,#28,IncrementaMes
+		jmp	AtualizarDisplay
+AnoBissexto:
 		mov	a,DIAS
-		cjne	a,#29,dif29
-		jmp	encontro1
-dif29:	jc	encontro1
-		mov	DIAS,#1
-		inc	MESES
-		jmp	encontro1
+		cjne	a,#29,IncrementaMes
+		jmp	AtualizarDisplay
 
-encontro1:
+IncrementaMes:
+		jc	AtualizarDisplay
+		mov	DIAS,#1
+		inc	MESES
+		jmp	AtualizarDisplay
+
+AtualizarDisplay:
 		jmp	DisplayScan
 ;=====================================================		   
 
 
-tabela:	db	0c0h	; 0 código do zero
+tabela:
+		db	0c0h		; 0 código do zero
 		db	0f9h		; 1 
 		db	0a4h		; 2 
 		db	0b0h		; 3 
